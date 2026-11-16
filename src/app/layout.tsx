@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   title: { default: "BLANC Salon — Skin · Aesthetics · Wellbeing", template: "%s · BLANC Salon" },
   description:
     "BLANC Salon: advanced facials, needling, Morpheus8, HIFU face and body, and wellbeing treatments. Book online and secure your appointment with a deposit.",
-  openGraph: { title: "BLANC Salon", description: "Skin · Aesthetics · Wellbeing", images: ["/brand/blanc-logo-instagram.jpg"] },
+  openGraph: { title: "BLANC Salon", description: "Skin · Aesthetics · Wellbeing", images: ["/gallery/lash-2.jpg"] },
   icons: { icon: "/brand/icon.svg" },
 };
 

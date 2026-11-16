@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { formatGBP } from "@/lib/core/money";
 
 export interface WizardTreatment {
@@ -75,6 +75,14 @@ export function BookingWizard({
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const lastDate = addDays(today, maxAdvanceDays);
+  const scrollOnOpen = useRef(false);
+
+  // Phones: when a category opens, bring its heading into view (the one above may have just closed).
+  useEffect(() => {
+    if (!scrollOnOpen.current || !category) return;
+    scrollOnOpen.current = false;
+    document.getElementById(`cat-${category.replace(/[^a-z0-9]+/gi, "-")}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [category]);
 
   useEffect(() => {
     if (!treatment) return;
@@ -144,6 +152,20 @@ export function BookingWizard({
     }
   }
 
+  const renderTreatment = (t: WizardTreatment) => (
+    <li key={t.id}>
+      <button type="button" onClick={() => chooseTreatment(t)} className={`group w-full py-5 text-left transition ${treatment?.id === t.id ? "bg-gold-light/20" : ""}`}>
+        <div className="flex items-baseline gap-3">
+          <span className="font-display text-lg uppercase tracking-[0.05em] group-hover:text-gold-deep">{t.name}</span>
+          <span className="leader" aria-hidden />
+          <span className="font-display text-xl">{formatGBP(t.pricePence, { trimWhole: true })}</span>
+        </div>
+        <p className="mt-1 text-sm text-charcoal/75">{t.summary}</p>
+        <p className="mt-2 text-xs text-taupe">{duration(t.durationMin)} · {t.depositPence > 0 ? `${formatGBP(t.depositPence)} deposit` : "No deposit"}</p>
+      </button>
+    </li>
+  );
+
   // Calendar grid (Mon-first)
   const first = `${month}-01`;
   const firstWeekday = (new Date(`${first}T12:00:00Z`).getUTCDay() + 6) % 7;
@@ -198,27 +220,42 @@ export function BookingWizard({
           {step === 0 && (
             <div>
               <h2 className="heading text-2xl">Choose your treatment</h2>
-              <div className="-mx-1 mt-5 flex gap-2 overflow-x-auto px-1 pb-2 [scrollbar-width:none]">
+              {/* Phones: tap a category to open it (no hidden sideways scrolling). */}
+              <p className="mt-2 text-sm text-taupe sm:hidden">Tap a category to see its treatments.</p>
+              <div className="mt-4 border-t border-sand sm:hidden">
+                {categories.map((c) => {
+                  const items = treatments.filter((t) => t.category === c);
+                  const open = category === c;
+                  const from = Math.min(...items.map((t) => t.pricePence));
+                  return (
+                    <div key={c} id={`cat-${c.replace(/[^a-z0-9]+/gi, "-")}`} className="scroll-mt-20 border-b border-sand">
+                      <button
+                        type="button"
+                        onClick={() => { scrollOnOpen.current = !open; setCategory(open ? "" : c); }}
+                        className="flex min-h-16 w-full items-center justify-between gap-4 py-4 text-left"
+                        aria-expanded={open}
+                      >
+                        <span>
+                          <span className="block font-display text-xl leading-tight">{c}</span>
+                          <span className="mt-1 block text-xs text-taupe">{items.length} treatment{items.length === 1 ? "" : "s"} · from {formatGBP(from, { trimWhole: true })}</span>
+                        </span>
+                        <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border text-lg transition ${open ? "rotate-45 border-ink bg-ink text-gold-light" : "border-stone text-ink"}`} aria-hidden>+</span>
+                      </button>
+                      {open && <ul className="divide-y divide-sand border-t border-sand bg-cream/40 px-1">{items.map(renderTreatment)}</ul>}
+                    </div>
+                  );
+                })}
+              </div>
+              {/* Tablet & desktop: category buttons that wrap onto extra lines. */}
+              <div className="mt-5 hidden flex-wrap gap-2 sm:flex">
                 {categories.map((c) => (
-                  <button key={c} type="button" onClick={() => setCategory(c)} className={`shrink-0 border px-3.5 py-2 text-[0.66rem] uppercase tracking-[0.16em] transition ${category === c ? "border-ink bg-ink text-gold-light" : "border-sand text-charcoal hover:border-gold"}`}>
+                  <button key={c} type="button" onClick={() => setCategory(c)} className={`border px-3.5 py-2 text-[0.66rem] uppercase tracking-[0.16em] transition ${category === c ? "border-ink bg-ink text-gold-light" : "border-sand text-charcoal hover:border-gold"}`}>
                     {c}
                   </button>
                 ))}
               </div>
-              <ul className="mt-4 divide-y divide-sand">
-                {treatments.filter((t) => t.category === category).map((t) => (
-                  <li key={t.id}>
-                    <button type="button" onClick={() => chooseTreatment(t)} className={`group w-full py-5 text-left transition ${treatment?.id === t.id ? "bg-gold-light/20" : ""}`}>
-                      <div className="flex items-baseline gap-3">
-                        <span className="font-display text-lg uppercase tracking-[0.05em] group-hover:text-gold-deep">{t.name}</span>
-                        <span className="leader" aria-hidden />
-                        <span className="font-display text-xl">{formatGBP(t.pricePence, { trimWhole: true })}</span>
-                      </div>
-                      <p className="mt-1 text-sm text-charcoal/75">{t.summary}</p>
-                      <p className="mt-2 text-xs text-taupe">{duration(t.durationMin)} · {t.depositPence > 0 ? `${formatGBP(t.depositPence)} deposit` : "No deposit"}</p>
-                    </button>
-                  </li>
-                ))}
+              <ul className="mt-4 hidden divide-y divide-sand sm:block">
+                {treatments.filter((t) => t.category === category).map(renderTreatment)}
               </ul>
               <p className="mt-6 text-sm text-taupe">Can&apos;t see your treatment? Some treatments are booked after a chat — <Link href="/treatments" className="underline">see the full menu</Link>.</p>
             </div>

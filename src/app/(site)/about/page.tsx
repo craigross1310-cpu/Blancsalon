@@ -17,8 +17,8 @@ export default async function AboutPage() {
       <main className="bg-ivory">
         <section className="mx-auto grid max-w-6xl gap-14 px-4 py-20 sm:px-8 md:grid-cols-2 md:py-28">
           <Reveal>
-            <div className="relative aspect-[4/5] w-full overflow-hidden bg-ink">
-              <Image src="/brand/blanc-logo-instagram.jpg" alt="BLANC. logo" fill sizes="(max-width:768px) 100vw, 50vw" className="object-cover" />
+            <div className="relative aspect-square w-full overflow-hidden bg-ink">
+              <Image src="/gallery/brows-1.jpg" alt="Brows by BLANC" fill sizes="(max-width:768px) 100vw, 50vw" className="object-cover" />
             </div>
             <PlaceholderNote className="mt-4">Replace with a photo of the owner and the treatment room.</PlaceholderNote>
           </Reveal>

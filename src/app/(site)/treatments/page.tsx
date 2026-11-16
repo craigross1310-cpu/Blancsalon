@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { CategoryJump } from "@/components/site/CategoryJump";
 import { PageHero } from "@/components/site/PageHero";
 import { PlaceholderNote } from "@/components/site/PlaceholderNote";
 import { Reveal } from "@/components/site/Reveal";
@@ -15,10 +16,13 @@ export default async function TreatmentsPage() {
       <PageHero eyebrow="Treatments & prices" script="Price list" title="The BLANC menu">
         Every treatment shows its price, time and deposit upfront. Choose yours and book online in minutes.
       </PageHero>
-      <nav className="sticky top-16 z-40 border-b border-sand bg-ivory/95 backdrop-blur sm:top-20" aria-label="Treatment categories">
-        <div className="mx-auto flex max-w-7xl gap-2 overflow-x-auto px-4 py-3 sm:px-8 [scrollbar-width:none]">
+      <nav className="sticky top-16 z-40 border-b border-sand bg-ivory/95 backdrop-blur sm:static" aria-label="Treatment categories">
+        <div className="px-4 py-3 sm:hidden">
+          <CategoryJump categories={groups.map((g) => ({ label: g.category, id: categorySlug(g.category) }))} />
+        </div>
+        <div className="mx-auto hidden max-w-7xl flex-wrap justify-center gap-2 px-8 py-3 sm:flex">
           {groups.map((g) => (
-            <a key={g.category} href={`#${categorySlug(g.category)}`} className="shrink-0 border border-sand px-4 py-2 text-[0.68rem] uppercase tracking-[0.18em] text-charcoal transition hover:border-gold hover:text-gold-deep">
+            <a key={g.category} href={`#${categorySlug(g.category)}`} className="border border-sand px-4 py-2 text-[0.68rem] uppercase tracking-[0.18em] text-charcoal transition hover:border-gold hover:text-gold-deep">
               {g.category}
             </a>
           ))}
@@ -35,7 +39,7 @@ export default async function TreatmentsPage() {
         {groups.map((g) => {
           const img = g.items.find((i) => i.imageUrl)?.imageUrl;
           return (
-            <section key={g.category} id={categorySlug(g.category)} className="scroll-mt-36 border-b border-sand last:border-0">
+            <section key={g.category} id={categorySlug(g.category)} className="scroll-mt-36 sm:scroll-mt-24 border-b border-sand last:border-0">
               <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 sm:px-8 md:grid-cols-[300px_1fr] md:py-20">
                 <Reveal>
                   <div className="md:sticky md:top-40">

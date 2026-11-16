@@ -90,7 +90,7 @@ export default async function HomePage() {
             </Reveal>
             <Reveal delay={150} className="relative">
               <div className="relative mx-auto aspect-[4/5] w-full max-w-sm overflow-hidden bg-ink">
-                <Image src="/brand/blanc-logo-instagram.jpg" alt="The BLANC. logo" fill sizes="(max-width: 768px) 90vw, 400px" className="object-cover" />
+                <Image src="/gallery/lash-2.jpg" alt="Lash extensions by BLANC" fill sizes="(max-width: 768px) 90vw, 400px" className="object-cover" />
               </div>
               <div className="absolute -bottom-5 -left-2 hidden border border-gold/50 bg-ivory px-6 py-4 shadow-xl sm:block md:-left-6">
                 <p className="eyebrow text-taupe">Book online</p>

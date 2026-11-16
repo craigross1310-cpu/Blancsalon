@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { loadSettings } from "@/lib/data";
 import { instagramUrl } from "@/lib/settings";
@@ -13,8 +12,8 @@ export async function SiteFooter() {
       <div className="glitter absolute inset-0 opacity-20" aria-hidden />
       <div className="relative mx-auto grid max-w-7xl gap-12 px-4 py-16 sm:px-8 md:grid-cols-[1.3fr_1fr_1fr_1fr]">
         <div>
-          <Image src="/brand/blanc-logo-instagram.jpg" alt="BLANC. logo" width={150} height={171} className="mb-5 w-32 rounded-sm" />
           <p className="eyebrow text-gold/80">{b.tagline}</p>
+          <Link href="/book" className="btn btn-outline-light mt-6 !px-5 !py-3">Book online</Link>
         </div>
         <div>
           <h3 className="eyebrow mb-4 text-gold-light">Visit</h3>
