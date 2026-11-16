@@ -36,17 +36,16 @@ With no `DATABASE_URL` the app runs in **demo mode** on an embedded Postgres (PG
 
 ## Host the client demo on Vercel
 
-Serverless functions don't share an embedded database, so a hosted demo needs a real Postgres (Supabase's free tier is fine):
+**Zero configuration:** import the GitHub repo into Vercel ([vercel.com/new](https://vercel.com/new) → *Import* `Blancsalon` → *Deploy*). No environment variables are needed — the site runs in demo mode with the embedded database, BLANC's menu and sample bookings. Every later `git push` redeploys automatically.
 
-1. Create a Supabase project. Copy **Project Settings → Database → Connection string → Transaction pooler** (port 6543).
-2. Load the schema + demo data from your machine:
-   ```bash
-   DATABASE_URL="postgres://…" npm run db:migrate -- --demo
-   ```
-   (Or `npm run db:migrate -- --print` and paste the SQL into Supabase's SQL editor.)
-3. Import the repo into Vercel and set environment variables (see [`.env.example`](.env.example)):
-   `DATABASE_URL`, `SESSION_SECRET` (≥ 32 random chars), `SITE_URL`, `CRON_SECRET`, and `SHOW_DEMO_BANNER=true` while it's a demo.
-4. Deploy. Log in at `/admin` with `owner@blanc.demo` / `blanc-demo` (or `DEMO_ADMIN_PASSWORD`).
+* Dashboard: `/admin` → `owner@blanc.demo` / `blanc-demo` (set `DEMO_ADMIN_PASSWORD` in Vercel to change it).
+* Demo data lives in the server's temporary storage, so it **resets to fresh sample data** when Vercel recycles the server (e.g. after a quiet spell). Perfect for showing the client; not for real bookings.
+
+**Persistent demo (optional):** to keep test bookings between visits, connect a free Supabase Postgres:
+
+1. Create a Supabase project and copy **Project Settings → Database → Connection string → Transaction pooler** (port 6543).
+2. Load the schema + demo data: `DATABASE_URL="postgres://…" npm run db:migrate -- --demo`
+3. In Vercel set `DATABASE_URL`, `SESSION_SECRET` (≥ 32 random chars), `SITE_URL`, `CRON_SECRET` and `SHOW_DEMO_BANNER=true`, then redeploy.
 
 ## Going live
 

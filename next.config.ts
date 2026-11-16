@@ -12,6 +12,9 @@ const nextConfig: NextConfig = {
   // PGlite (embedded Postgres used in demo mode) ships a WASM binary and must not be bundled.
   serverExternalPackages: ["@electric-sql/pglite"],
   poweredByHeader: false,
+  output: process.env.STANDALONE === "1" ? "standalone" : undefined,
+  // Make sure the embedded demo database (WASM + data files) is always deployed.
+  outputFileTracingIncludes: { "/**": ["./node_modules/@electric-sql/pglite/dist/**/*"] },
   images: { remotePatterns: [{ protocol: "https", hostname: "*.supabase.co" }] },
   experimental: { serverActions: { bodySizeLimit: "3mb" } },
   async headers() {
