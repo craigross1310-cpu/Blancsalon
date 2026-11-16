@@ -14,9 +14,18 @@ export function databaseUrl(): string | undefined {
   return process.env.DATABASE_URL || process.env.POSTGRES_URL || undefined;
 }
 
-/** Demo mode = no external database configured; an embedded Postgres (PGlite) is used. */
-export function isDemoMode(): boolean {
+/** No external database configured: an embedded Postgres (PGlite) is used. */
+export function usesEmbeddedDb(): boolean {
   return !databaseUrl();
+}
+
+/**
+ * Demo mode = the site hasn't been configured for real use yet (no database, or
+ * no SESSION_SECRET). In demo mode the database is set up automatically with
+ * BLANC's menu, a demo owner login and sample bookings.
+ */
+export function isDemoMode(): boolean {
+  return usesEmbeddedDb() || !process.env.SESSION_SECRET;
 }
 
 // ── PGlite (embedded, demo) ─────────────────────────────────────
@@ -52,8 +61,13 @@ async function createPglite(dataDir: string): Promise<Db> {
 // ── postgres.js (production: Supabase / Neon / any Postgres) ────
 async function createPostgres(url: string): Promise<Db> {
   const postgres = (await import("postgres")).default;
-  const isLocal = /localhost|127\.0\.0\.1|\/\/[^@]*@?\/|host=\//.test(url);
-  const sql = postgres(url, {
+  const parsed = new URL(url);
+  const isLocal = ["localhost", "127.0.0.1", ""].includes(parsed.hostname);
+  // Hosting providers add query options (sslmode, channel_binding, pgbouncer…) that
+  // postgres.js would forward to the server as settings; SSL is configured below instead.
+  const host = parsed.searchParams.get("host"); // unix-socket connections
+  parsed.search = host ? `?host=${encodeURIComponent(host)}` : "";
+  const sql = postgres(parsed.toString(), {
     // Supabase's transaction pooler (port 6543) does not support prepared statements.
     prepare: false,
     max: Number(process.env.DATABASE_POOL_MAX || 5),
@@ -85,11 +99,11 @@ async function createPostgres(url: string): Promise<Db> {
 
 // ── Migrations ─────────────────────────────────────────────────
 export async function migrate(db: Db): Promise<string[]> {
-  await db.exec(`create table if not exists schema_migrations (
-    name text primary key, applied_at timestamptz not null default now())`);
   const applied: string[] = [];
   await db.tx(async (t) => {
     if (db.kind === "postgres") await t.query("select pg_advisory_xact_lock(727274)");
+    await t.exec(`create table if not exists schema_migrations (
+      name text primary key, applied_at timestamptz not null default now())`);
     const done = new Set((await t.query<{ name: string }>("select name from schema_migrations")).map((r) => r.name));
     for (const m of migrations) {
       if (done.has(m.name)) continue;
@@ -110,7 +124,15 @@ export function getDb(): Promise<Db> {
       const url = databaseUrl();
       if (url) {
         const db = await createPostgres(url);
-        if (process.env.AUTO_MIGRATE === "true") await migrate(db);
+        if (isDemoMode() || process.env.AUTO_MIGRATE === "true") await migrate(db);
+        if (isDemoMode()) {
+          const { seedIfEmpty } = await import("./seed");
+          // Serialise first-run seeding across concurrently starting servers.
+          await db.tx(async (t) => {
+            await t.query("select pg_advisory_xact_lock(727276)");
+            await seedIfEmpty(t);
+          });
+        }
         return db;
       }
       const dir =

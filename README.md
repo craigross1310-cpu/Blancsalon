@@ -19,6 +19,7 @@ Clients browse the menu, see live availability, request an appointment and immed
 | **Pending → confirmed** | Requests are `PENDING PAYMENT` and hold the slot until the configurable deadline. Unpaid requests **expire automatically** (on every availability check, every dashboard load, and a daily cron) and the client is emailed. |
 | **Manual payment confirmation** | Owner records date, amount, method and notes. Statuses: deposit pending → deposit received → paid in full / refunded. Everything is labelled *“recorded manually”* — the software never claims to verify payments. |
 | **Owner dashboard** | Overview (today, upcoming, requests, pending deposits, confirmed, cancelled, recorded deposits, outstanding balances), calendar (day / week / month, colour-coded), bookings with search and filters, booking detail (confirm, decline, cancel, move, attendance, payments, refunds, notes, contact by email / call / SMS / WhatsApp, activity log), payments with **CSV export** for bookkeeping, treatments, availability, clients, email log and settings. |
+| **Calendar sync** | Private subscription link (Settings → Calendar sync) that puts every booking into the owner's iPhone, Mac or Google Calendar and keeps it updated. Clients get an “add to calendar” link in their confirmation. |
 | **Notifications** | Branded emails: request received + deposit instructions, confirmed, declined, cancelled, expired, reminder, rescheduled; owner: new request / pending deposit, confirmation, cancellation request. Sent through Resend when configured; otherwise captured in **Dashboard → Emails** so they can be shown in the demo. Channels are pluggable (SMS / WhatsApp ready). |
 | **Customer self-service** | Private booking page (unguessable link) with live status, copyable bank details, deadline, “add to calendar” (.ics) and a cancellation-request form. |
 | **Security & GDPR** | Signed, HTTP-only session cookies, scrypt password hashing, login rate limiting, owner / staff roles, server-side validation on every action, Row Level Security enabled on every table (deny-by-default to Supabase's public API), formula-injection-safe CSV, security headers, `noindex` admin, automatic anonymisation of inactive clients after a configurable retention period, privacy notice draft. |
@@ -36,20 +37,18 @@ With no `DATABASE_URL` the app runs in **demo mode** on an embedded Postgres (PG
 
 ## Host the client demo on Vercel
 
-**Zero configuration:** import the GitHub repo into Vercel ([vercel.com/new](https://vercel.com/new) → *Import* `Blancsalon` → *Deploy*). No environment variables are needed — the site runs in demo mode with the embedded database, BLANC's menu and sample bookings. Every later `git push` redeploys automatically.
+1. Import the GitHub repo into Vercel ([vercel.com/new](https://vercel.com/new) → *Import* `Blancsalon` → *Deploy*).
+2. Connect a free database (Vercel serves pages and APIs from separate servers, so they need a shared database):
+   Vercel → project → **Storage** → **Create Database** → **Neon** (free) → create → connect to the project → **Redeploy**.
+3. That's it. On first visit the app creates its tables and loads BLANC's menu, a demo owner login and fictional sample bookings automatically. Every `git push` redeploys.
 
-* Dashboard: `/admin` → `owner@blanc.demo` / `blanc-demo` (set `DEMO_ADMIN_PASSWORD` in Vercel to change it).
-* Demo data lives in the server's temporary storage, so it **resets to fresh sample data** when Vercel recycles the server (e.g. after a quiet spell). Perfect for showing the client; not for real bookings.
-
-**Persistent demo (optional):** to keep test bookings between visits, connect a free Supabase Postgres:
-
-1. Create a Supabase project and copy **Project Settings → Database → Connection string → Transaction pooler** (port 6543).
-2. Load the schema + demo data: `DATABASE_URL="postgres://…" npm run db:migrate -- --demo`
-3. In Vercel set `DATABASE_URL`, `SESSION_SECRET` (≥ 32 random chars), `SITE_URL`, `CRON_SECRET` and `SHOW_DEMO_BANNER=true`, then redeploy.
+* Dashboard: `/admin` → `owner@blanc.demo` / `blanc-demo` (set `DEMO_ADMIN_PASSWORD` to change it).
+* Optional — real emails during the demo: add `RESEND_API_KEY` and `EMAIL_FROM` (see `.env.example`), and set the owner email in Dashboard → Settings → Emails.
+* The site stays in demo mode (banner, demo login, sample data) until `SESSION_SECRET` is set — that switch marks it as the real, live system.
 
 ## Going live
 
-1. Create a fresh database: `DATABASE_URL=… npm run db:migrate -- --seed-menu` (menu only, no sample data).
+1. Use a fresh database and set `SESSION_SECRET` first (this turns off demo mode, so no sample data is created). Then: `DATABASE_URL=… npm run db:migrate -- --seed-menu` (menu only).
 2. Create the owner login: `DATABASE_URL=… npm run db:seed-owner -- owner@blancsalon.co.uk "Owner name"`.
 3. Email: create a [Resend](https://resend.com) account, verify the salon's domain, set `RESEND_API_KEY` and `EMAIL_FROM`.
 4. Optional images bucket: create a public Supabase Storage bucket `treatment-images` and set `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY`.

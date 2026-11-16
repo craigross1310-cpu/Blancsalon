@@ -71,6 +71,12 @@ export interface PrivacySettings {
   retentionMonths: number;
 }
 
+export interface CalendarSettings {
+  /** Secret token in the owner's private calendar-subscription link. */
+  feedToken: string;
+  includePending: boolean;
+}
+
 export interface AllSettings {
   business: BusinessSettings;
   payment: PaymentSettings;
@@ -78,6 +84,7 @@ export interface AllSettings {
   policies: PolicySettings;
   notifications: NotificationSettings;
   privacy: PrivacySettings;
+  calendar: CalendarSettings;
 }
 
 export type SettingsKey = keyof AllSettings;
@@ -151,6 +158,10 @@ export const DEFAULT_SETTINGS: AllSettings = {
   },
   privacy: {
     retentionMonths: 24,
+  },
+  calendar: {
+    feedToken: "",
+    includePending: true,
   },
 };
 

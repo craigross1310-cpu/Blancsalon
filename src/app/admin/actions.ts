@@ -354,6 +354,13 @@ export async function saveSettingsAction(fd: FormData) {
   back(path, "Settings saved.");
 }
 
+export async function rotateCalendarAction() {
+  await requireAdmin("owner");
+  const { ensureFeedToken } = await import("@/lib/calendar");
+  await ensureFeedToken(await getDb(), true);
+  back("/admin/settings?tab=calendar", "New calendar link created — the old one no longer works. Re-add it to your calendar.");
+}
+
 export async function anonymiseNowAction() {
   await requireAdmin("owner");
   const db = await getDb();

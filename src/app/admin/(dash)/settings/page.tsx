@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { anonymiseNowAction, changePasswordAction, saveSettingsAction } from "@/app/admin/actions";
+import { anonymiseNowAction, changePasswordAction, rotateCalendarAction, saveSettingsAction } from "@/app/admin/actions";
+import { ensureFeedToken, feedUrls } from "@/lib/calendar";
 import { Card, Flash, PageTitle, btn, input, label } from "@/components/admin/ui";
 import { requireAdmin } from "@/lib/auth/session";
 import { getDb, isDemoMode } from "@/lib/db/client";
@@ -82,6 +83,11 @@ const SECTIONS: { key: keyof AllSettings | "account"; title: string; fields?: Fi
     intro: "UK GDPR: personal details are only kept as long as needed. Clients with no appointment in this period are anonymised automatically (names, contact details and notes removed; amounts kept for your accounts).",
     fields: [{ key: "retentionMonths", label: "Anonymise inactive clients after (months)", type: "number" }],
   },
+  {
+    key: "calendar",
+    title: "Calendar sync",
+    fields: [{ key: "includePending", label: "Also show requests that are still pending (marked “PENDING”)", type: "checkbox" }],
+  },
   { key: "account", title: "Account" },
 ];
 
@@ -90,6 +96,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
   const sp = await searchParams;
   const settings = await getSettings(await getDb());
   const current = SECTIONS.find((s) => s.key === sp.tab) ?? SECTIONS[0];
+  const feed = current.key === "calendar" ? feedUrls(await ensureFeedToken(await getDb())) : null;
   const values = current.key !== "account" ? (settings[current.key] as unknown as Record<string, unknown>) : {};
   return (
     <div className="mx-auto max-w-4xl">
@@ -131,6 +138,24 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
           </Card>
           <div className="mt-5 flex justify-end"><button className={btn.primary}>Save {current.title.toLowerCase()}</button></div>
         </form>
+      )}
+      {feed && (
+        <Card title="Add the salon diary to your phone" className="mt-6">
+          <p className="text-sm leading-relaxed text-charcoal/80">
+            Subscribe once and every booking appears in your own calendar automatically — new requests, confirmations, moves and cancellations all
+            update by themselves (calendar apps refresh every 15–60 minutes).
+          </p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <a href={feed.webcal} className={btn.gold}>Add to iPhone / Mac Calendar</a>
+            <a href={`https://calendar.google.com/calendar/r?cid=${encodeURIComponent(feed.webcal)}`} target="_blank" rel="noreferrer" className={btn.outline}>Add to Google Calendar</a>
+          </div>
+          <label className={`${label} mt-5`}>Private calendar link</label>
+          <input readOnly value={feed.https} className={`${input} font-mono text-xs`} />
+          <p className="mt-2 text-xs text-taupe">Keep this link private — anyone with it can see your bookings. If it&apos;s ever shared by mistake, reset it.</p>
+          <form action={rotateCalendarAction} className="mt-4">
+            <button className={btn.outline}>Reset link</button>
+          </form>
+        </Card>
       )}
       {current.key === "privacy" && (
         <Card title="Run now" className="mt-6">

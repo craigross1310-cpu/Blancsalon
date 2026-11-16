@@ -149,7 +149,8 @@ export function renderCustomer(template: CustomerTemplate, c: Ctx): RenderedMess
         p(`Hi ${first}, you're booked in. We look forward to seeing you.`) +
           table([...summary, ["Recorded as paid", formatGBP(b.paidPence)], ["Remaining balance", formatGBP(balance)]]) +
           p(`Need to change something? Please get in touch as early as possible — see our booking policies on your booking page.`) +
-          button(c.bookingUrl, "View your booking")
+          button(c.bookingUrl, "View your booking") +
+          p(`<a href="${esc(c.bookingUrl.replace(/\/booking\/([^?]+)\?t=/, "/api/bookings/$1/ics?t="))}" style="color:#9c7a43">Add this appointment to your calendar</a>`)
       );
       const text = `Hi ${firstText},\n\nYour BLANC appointment is confirmed.\n\n${textTable(summary)}\nRecorded as paid: ${formatGBP(b.paidPence)}\nRemaining balance: ${formatGBP(balance)}\n\nView your booking: ${c.bookingUrl}\n`;
       return { subject, html, text };

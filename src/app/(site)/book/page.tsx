@@ -1,4 +1,5 @@
 import { BookingWizard, type WizardTreatment } from "@/components/booking/BookingWizard";
+import { SetupNotice } from "@/components/site/SetupNotice";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { PolicyList } from "@/components/site/PolicyList";
 import { calculateDeposit } from "@/lib/core/deposit";
@@ -31,6 +32,7 @@ export default async function BookPage({ searchParams }: { searchParams: Promise
     <>
       <SiteHeader />
       <main className="min-h-dvh bg-cream pt-16 sm:pt-20">
+        <div className="px-4 pt-6 empty:hidden"><SetupNotice /></div>
         <BookingWizard
           treatments={treatments}
           initialSlug={treatment}

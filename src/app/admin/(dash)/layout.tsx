@@ -4,7 +4,8 @@ import { AdminNav } from "@/components/admin/AdminNav";
 import { Wordmark } from "@/components/site/Wordmark";
 import { requireAdmin } from "@/lib/auth/session";
 import { runScheduledJobs } from "@/lib/booking/service";
-import { getDb, isDemoMode } from "@/lib/db/client";
+import { getDb, isDemoMode, usesEmbeddedDb } from "@/lib/db/client";
+import { SetupNotice } from "@/components/site/SetupNotice";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Dashboard", robots: { index: false, follow: false } };
@@ -40,10 +41,13 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <Link href="/" className="hover:text-gold-light">View site ↗</Link>
             <form action={logoutAction}><button className="hover:text-gold-light">Sign out</button></form>
           </div>
-          {isDemoMode() && <p className="mt-6 rounded border border-gold/30 p-2 text-[0.65rem] leading-relaxed text-gold-light/80">Demo mode: embedded database with sample data. Emails are captured in “Emails”, not sent.</p>}
+          {isDemoMode() && <p className="mt-6 rounded border border-gold/30 p-2 text-[0.65rem] leading-relaxed text-gold-light/80">Demo mode: sample data{usesEmbeddedDb() ? " in a temporary built-in database" : ""}. Emails are captured in “Emails”{process.env.RESEND_API_KEY ? "" : ", not sent"}.</p>}
         </div>
       </aside>
-      <main className="min-w-0 flex-1 px-4 py-6 sm:px-6 lg:ml-60 lg:px-10 lg:py-10">{children}</main>
+      <main className="min-w-0 flex-1 px-4 py-6 sm:px-6 lg:ml-60 lg:px-10 lg:py-10">
+        <SetupNotice />
+        {children}
+      </main>
     </div>
   );
 }
